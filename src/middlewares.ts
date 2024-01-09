@@ -10,6 +10,14 @@ export function notFound(req: Request, res: Response, next: NextFunction) {
   next(error);
 }
 
+export function successResponse(req: Request, res: Response, next: NextFunction, data: any, statusCode: number = 200) {
+  res.status(statusCode).json({
+    success: true,
+    statusCode:200,
+    data,
+  });
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err: Error, req: Request, res: Response<ErrorResponse>, next: NextFunction) {
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;

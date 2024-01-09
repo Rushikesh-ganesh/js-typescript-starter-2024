@@ -3,11 +3,39 @@ import {Todo,TodoWithId,Todos} from './todos.model';
 import { InsertOneResult, ObjectId } from 'mongodb';
 import { ZodError } from 'zod';
 import { ParamsWithId } from '../../interfaces/ParamsWithId';
+import { successResponse } from '../../middlewares';
 
-export async function findAll(req:Request,res:Response<TodoWithId[]>,next:NextFunction){
+export async function findAll(req:Request,res:Response<{}>,next:NextFunction){
     try {
-        const result = await Todos.find().toArray();
-        res.json(result);
+        const page = parseInt(`${req.query.page}`) || 1;
+        const pageSize = parseInt(`${req.query.pageSize}`) || 10;
+        const searchQuery = req.query.search || '';
+        const skip = (page - 1) * pageSize;
+        const searchPattern = new RegExp(`${searchQuery}`, 'i');
+        const query: Record<string, any> = {};
+
+        if (searchQuery) {
+          query.$or = [
+            { content: { $regex: searchPattern } },
+          ];
+        }
+
+        const totalCount = await Todos.countDocuments();
+        const totalPages = Math.ceil(totalCount / pageSize);
+        
+        const result = await Todos.find(query).skip(skip).limit(pageSize).toArray();
+        
+        successResponse(req, res, next,
+         {
+            data: {
+              result,
+              page,
+              pageSize,
+              totalPages,
+              totalCount,
+            }
+          });
+
     } catch (error) {
         next(error);
     }
@@ -26,7 +54,6 @@ export async function createOne(req:Request<{},TodoWithId,Todo>,res:Response<Tod
             ...req.body
         })
     } catch (error) {
-      
         next(error);
     }
 }

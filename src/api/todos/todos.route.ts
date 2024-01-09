@@ -1,11 +1,17 @@
-import {Router , Request ,Response} from 'express';
-import {Todo,TodoWithId,Todos} from './todos.model';
+import {Router , Request ,Response, NextFunction} from 'express';
+import * as TodoHandler from './todos.handler';
+import { Todo } from './todos.model';
+import { valiadateRequest } from '../../middlewares';
+import { ParamsWithId } from '../../interfaces/ParamsWithId';
+
 const router = Router();
 
-router.get('/',async (req:Request,res:Response<TodoWithId[]>)=>{
-    const result = await Todos.find();
-    const todos =await result.toArray();
-    res.json(todos);
-})
+
+router.get('/',TodoHandler.findAll);
+router.get('/:id',valiadateRequest({params:ParamsWithId}),TodoHandler.findOne);
+router.post('/',valiadateRequest({body:Todo}),TodoHandler.createOne);
+router.put('/:id',valiadateRequest({params:ParamsWithId,body:Todo}),TodoHandler.updateOne);
+router.delete('/:id',valiadateRequest({params:ParamsWithId}),TodoHandler.deleteOne);
+
 
 export default router;

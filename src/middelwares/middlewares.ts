@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 
-import ErrorResponse from './interfaces/ErrorResponse';
+import ErrorResponse from '../interfaces/ErrorResponse';
 import { ZodError } from 'zod';
-import RequestValidators from './interfaces/RequestValidator';
+import RequestValidators from '../interfaces/RequestValidator';
 
 export function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404);
@@ -17,15 +17,32 @@ export function successResponse(req: Request, res: Response, next: NextFunction,
     data,
   });
 }
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err: Error, req: Request, res: Response<ErrorResponse>, next: NextFunction) {
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
   res.status(statusCode);
-  res.json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
-  });
+
+  if (err instanceof ZodError) {
+    // If it's a ZodError, extract the error details
+    const zodErrors: Record<string, any>[] = err.errors.map((error) => {
+      return {
+        path: error.path.join('.'),
+        message: error.message,
+      };
+    });
+
+    res.json({
+      message: 'Validation error',
+      errors: zodErrors,
+    });
+  } else {
+    // For other types of errors, send a generic error response
+    res.json({
+      message: err.message,
+      stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
+    });
+  }
+
 }
 export function valiadateRequest(validators:RequestValidators){
   return async (req:Request,res:Response,next:NextFunction)=>{
@@ -48,3 +65,15 @@ export function valiadateRequest(validators:RequestValidators){
       }
   }
 }
+
+
+export function checkRoleAndPermission(allowedRoles: string[])  {
+  return (req: Request, res: Response, next: Function) => {
+    const { role } = req.body;
+    if (allowedRoles.includes(role)) {
+      next();
+    } else {
+      res.status(403).json({ error: 'Unauthorized' });
+    }
+  };
+};

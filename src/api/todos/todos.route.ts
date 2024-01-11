@@ -1,7 +1,7 @@
 import {Router , Request ,Response, NextFunction} from 'express';
 import * as TodoHandler from './todos.handler';
 import { Todo } from './todos.model';
-import { valiadateRequest } from '../../middlewares';
+import { valiadateRequest } from '../../middelwares/middlewares';
 import { ParamsWithId } from '../../interfaces/ParamsWithId';
 
 const router = Router();

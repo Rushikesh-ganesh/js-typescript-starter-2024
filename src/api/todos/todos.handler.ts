@@ -3,7 +3,7 @@ import {Todo,TodoWithId,Todos} from './todos.model';
 import { InsertOneResult, ObjectId } from 'mongodb';
 import { ZodError } from 'zod';
 import { ParamsWithId } from '../../interfaces/ParamsWithId';
-import { successResponse } from '../../middlewares';
+import { successResponse } from '../../middelwares/middlewares';
 
 export async function findAll(req:Request,res:Response<{}>,next:NextFunction){
     try {
